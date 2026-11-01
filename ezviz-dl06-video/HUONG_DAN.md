@@ -1,14 +1,21 @@
-# Video EZVIZ DL06 (9:16, 1080x1920, 39 giây)
+# Video EZVIZ DL06 (9:16, 1080x1920, 40 giây)
 
-## Vị trí khung ảnh lắp đặt (chèn trong CapCut)
-| Khung | Thời điểm | Vùng ảnh (px trên 1080x1920) | Caption |
+## Các vị trí chèn ảnh thực tế
+| Khung | Thời điểm | Vùng ảnh (px trên 1080x1920) | File để render tự động |
 |---|---|---|---|
-| Ảnh 1 | 0:04.0 – 0:07.5 | x 96–984, y 316–1464 | Sang trọng trên mọi cánh cửa |
-| Ảnh 2 | 0:21.1 – 0:24.6 | như trên | Lắp đặt gọn gàng, thẩm mỹ |
-| Ảnh 3 | 0:31.4 – 0:34.9 | như trên | Công trình thực tế |
-| Liên hệ | 0:36.5 – 0:39.0 | ô gạch đứt cuối video | Hotline / địa chỉ |
+| Ảnh lắp đặt 1 | 0:04.0 – 0:07.5 | x 96–984, y 316–1464 | `anh/slot1.jpg` |
+| Ảnh lắp đặt 2 | 0:21.1 – 0:24.6 | x 96–984, y 316–1464 | `anh/slot2.jpg` |
+| Ảnh nghiệm thu 1 | 0:31.4 – 0:36.0 | x 90–516, y 400–925 | `anh/nghiemthu1.jpg` |
+| Ảnh nghiệm thu 2 | 0:31.4 – 0:36.0 | x 564–990, y 400–925 | `anh/nghiemthu2.jpg` |
+| Ảnh nghiệm thu 3 | 0:31.4 – 0:36.0 | x 90–516, y 973–1498 | `anh/nghiemthu3.jpg` |
+| Ảnh nghiệm thu 4 | 0:31.4 – 0:36.0 | x 564–990, y 973–1498 | `anh/nghiemthu4.jpg` |
+| Liên hệ | 0:37.5 – 0:40.0 | ô gạch đứt cuối video | sửa `contact` trong `video.html` |
 
-## Cách tự render lại có ảnh thật (không cần CapCut)
-1. Bỏ ảnh vào thư mục `anh/`: `slot1.jpg`, `slot2.jpg`, `slot3.jpg` (ảnh dọc là đẹp nhất), `logo.png` (logo EZVIZ gốc, nền trong suốt).
-2. Sửa chữ / hotline trong `CONFIG` ở đầu file `video.html`.
-3. Chạy `node render.js` → ra `EZVIZ_DL06.mp4`. (`python3 make_music.py` để tạo lại nhạc nền.)
+Ảnh nghiệm thu nên là ảnh dọc (tỉ lệ khoảng 4:5); ảnh ngang vẫn dùng được, sẽ tự cắt vừa khung.
+
+## Render lại
+1. Bỏ ảnh vào `anh/` với đúng tên file ở bảng trên (jpg/png/webp).
+2. Sửa chữ trong `CONFIG` ở đầu `video.html` (caption, tiêu đề cảnh nghiệm thu, hotline).
+3. `node render.js --preview` để xem trước khung hình (thư mục `preview/`), rồi `python3 make_music.py && node render.js` để xuất `EZVIZ_DL06.mp4`.
+
+Ảnh sản phẩm DL06 + logo: `python3 prep_images.py <thư mục ảnh gốc>` (đã tách nền sẵn trong `anh/`).

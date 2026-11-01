@@ -21,8 +21,14 @@ const CONFIG = {
   slots: [
     { label: 'ẢNH LẮP ĐẶT THỰC TẾ 1', caption: 'Sang trọng trên mọi cánh cửa' },
     { label: 'ẢNH LẮP ĐẶT THỰC TẾ 2', caption: 'Lắp đặt gọn gàng, thẩm mỹ' },
-    { label: 'ẢNH LẮP ĐẶT THỰC TẾ 3', caption: 'Công trình thực tế' },
   ],
+  // Cảnh nghiệm thu: 4 ô ảnh (anh/nghiemthu1.jpg ... nghiemthu4.jpg)
+  gallery: {
+    chip: 'NGHIỆM THU THỰC TẾ',
+    title: 'Bàn giao tại công trình',
+    caption: 'Hoạt động ổn định – Khách hàng hài lòng',
+    labels: ['ẢNH NGHIỆM THU 1', 'ẢNH NGHIỆM THU 2', 'ẢNH NGHIỆM THU 3', 'ẢNH NGHIỆM THU 4'],
+  },
   methods: [
     { icon: 'finger', hl: 'finger', title: 'Vân tay',      desc: 'Một chạm là mở, nhanh trong tích tắc' },
     { icon: 'keypad', hl: 'keypad', title: 'Mật khẩu',     desc: 'Mã ảo chống nhìn trộm' },
@@ -44,7 +50,7 @@ const CONFIG = {
   contact: '',   // VD: 'Hotline: 0909 xxx xxx' — để trống sẽ hiện ô trống để tự chèn
 };
 
-/* Ảnh do render.js nạp vào (anh/slot1.jpg, anh/slot2.jpg, anh/slot3.jpg, anh/logo.png) */
+/* Ảnh do render.js nạp vào (anh/slot1.jpg, anh/slot2.jpg, anh/nghiemthu1-4.jpg, anh/logo.png) */
 window.ASSETS = window.ASSETS || {};
 const IMG = {};
 window.loadAssets = async (assets) => {
@@ -70,10 +76,10 @@ const SCENES = [
   { id: 'methods',  start: 9.1,  dur: 12.0 },   // 6 x 2.0s
   { id: 'slot1',    start: 21.1, dur: 3.5 },
   { id: 'features', start: 24.6, dur: 6.8 },
-  { id: 'slot2',    start: 31.4, dur: 3.5 },
-  { id: 'outro',    start: 34.9, dur: 4.1 },
+  { id: 'gallery',  start: 31.4, dur: 4.6 },
+  { id: 'outro',    start: 36.0, dur: 4.0 },
 ];
-const DURATION = 39.0;
+const DURATION = 40.0;
 window.VIDEO_META = { FPS, DURATION, SCENES, methodStart: 9.1, methodDur: 2.0 };
 
 /* ===================== Tiện ích ===================== */
@@ -572,6 +578,57 @@ function sceneFeatures(t, dur) {
   });
 }
 
+
+function coverImage(img, x, y, w, h, z) {
+  const ar = img.width / img.height, br = w / h;
+  let dw, dh; if (ar > br) { dh = h; dw = dh * ar; } else { dw = w; dh = dw / ar; }
+  dw *= z; dh *= z; ctx.drawImage(img, x + w / 2 - dw / 2, y + h / 2 - dh / 2, dw, dh);
+}
+function sceneGallery(t, dur) {
+  const G = CONFIG.gallery;
+  const ha = eOut(prog(t, 0, .5));
+  ctx.save(); ctx.globalAlpha *= ha;
+  pill(G.chip, W / 2, 220, { size: 28, weight: 800, solid: true });
+  text(G.title, W / 2, 315 - (1 - ha) * 20, { size: 58, weight: 900, color: C.ink });
+  ctx.restore();
+  const gap = 28, x0 = 80, y0 = 390, cw = (920 - gap) / 2, ch = 545;
+  const sc = SCENES.find(q => q.id === 'gallery');
+  for (let i = 0; i < 4; i++) {
+    const col = i % 2, row = Math.floor(i / 2);
+    const x = x0 + col * (cw + gap), y = y0 + row * (ch + gap);
+    const k = eBack(prog(t, .25 + i * .22, .8 + i * .22));
+    if (k <= 0) continue;
+    const img = IMG['nghiemthu' + (i + 1)];
+    ctx.save(); ctx.globalAlpha *= clamp(k);
+    ctx.translate(x + cw / 2, y + ch / 2); const z = clamp(k, 0, 1.1); ctx.scale(lerp(.85, 1, z), lerp(.85, 1, z)); ctx.translate(-cw / 2, -ch / 2);
+    shadowCard(0, 0, cw, ch, 32, '#FFFFFF', 36, .16);
+    ctx.save(); rr(10, 10, cw - 20, ch - 20, 24); ctx.clip();
+    if (img) coverImage(img, 10, 10, cw - 20, ch - 20, 1.03 + .07 * (t / dur));
+    else {
+      const g = ctx.createLinearGradient(0, 0, 0, ch); g.addColorStop(0, '#F2F9FF'); g.addColorStop(1, '#DCEFFD');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, cw, ch);
+    }
+    ctx.restore();
+    if (!img) {
+      ctx.save(); ctx.setLineDash([20, 14]); ctx.lineDashOffset = -t * 40; ctx.strokeStyle = C.blue; ctx.lineWidth = 4;
+      rr(26, 26, cw - 52, ch - 52, 20); ctx.stroke(); ctx.restore();
+      icon('image', cw / 2, ch / 2 - 60, 110, C.blue);
+      text(G.labels[i], cw / 2, ch / 2 + 50, { size: 34, weight: 800, color: C.blueD });
+      text('Chèn ảnh của bạn', cw / 2, ch / 2 + 100, { size: 26, weight: 500, color: C.ink2 });
+      text(`${fmt(sc.start)} – ${fmt(sc.start + sc.dur)}`, cw / 2, ch / 2 + 142, { size: 24, weight: 600, color: C.blue });
+    }
+    // huy hiệu số thứ tự
+    ctx.beginPath(); ctx.arc(46, 46, 26, 0, 6.3); ctx.fillStyle = C.blue; ctx.fill();
+    text(String(i + 1), 46, 48, { size: 28, weight: 800, color: '#fff' });
+    ctx.restore();
+  }
+  const ca = eOut(prog(t, 1.3, 1.9));
+  ctx.save(); ctx.globalAlpha *= ca;
+  text(G.caption, W / 2, 1640 + (1 - ca) * 30, { size: 46, weight: 800, color: C.ink });
+  ctx.fillStyle = C.blue; rr(W / 2 - 60 * ca, 1695, 120 * ca, 8, 4); ctx.fill();
+  ctx.restore();
+}
+
 function sceneOutro(t, dur) {
   const lk = eOut(prog(t, 0, .8));
   ctx.save();
@@ -610,7 +667,7 @@ function sceneOutro(t, dur) {
 /* ===================== Render một khung hình ===================== */
 const DRAW = {
   intro: sceneIntro, mintro: sceneMIntro, methods: sceneMethods, features: sceneFeatures, outro: sceneOutro,
-  slot0: (t, d) => slotScene(t, d, 0), slot1: (t, d) => slotScene(t, d, 1), slot2: (t, d) => slotScene(t, d, 2),
+  slot0: (t, d) => slotScene(t, d, 0), slot1: (t, d) => slotScene(t, d, 1), gallery: sceneGallery,
 };
 function render(T) {
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1;

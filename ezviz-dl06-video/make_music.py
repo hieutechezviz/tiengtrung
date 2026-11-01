@@ -1,6 +1,6 @@
 # Tạo nhạc nền nhẹ nhàng (tự tổng hợp, không bản quyền) + tiếng "ting" lúc mở khoá
 import numpy as np, wave
-SR=44100; DUR=39.0; N=int(SR*DUR); t=np.arange(N)/SR
+SR=44100; DUR=40.0; N=int(SR*DUR); t=np.arange(N)/SR
 out=np.zeros(N)
 def note(f,start,length,amp,kind='pluck'):
     s=int(start*SR); n=int(length*SR); n=min(n,N-s)
@@ -38,7 +38,7 @@ while tm<DUR:
     tm+=bar; b+=1
 for ct in [2.95]+[9.1+1.2+2*i for i in range(6)]:
     note(mid(84),ct,1.0,.12,'chime'); note(mid(91),ct+.08,1.0,.10,'chime')
-for ct in [4.0,7.5,9.1,21.1,24.6,31.4,34.9]:  # whoosh chuyển cảnh
+for ct in [4.0,7.5,9.1,21.1,24.6,31.4,36.0]:  # whoosh chuyển cảnh
     s=int((ct-.3)*SR); n=int(.5*SR); tt=np.arange(n)/SR
     nz=np.convolve(np.random.randn(n),np.ones(30)/30,'same')
     out[s:s+n]+=nz*np.sin(np.pi*tt/.5)**2*.10

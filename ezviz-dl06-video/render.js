@@ -1,7 +1,7 @@
 // Render video.html -> EZVIZ_DL06.mp4
 // Cách dùng:  node render.js            (render toàn bộ)
 //             node render.js --preview  (xuất vài ảnh PNG xem trước)
-// Ảnh tuỳ chọn trong thư mục anh/: slot1.jpg, slot2.jpg, slot3.jpg (ảnh lắp đặt), logo.png (logo EZVIZ gốc)
+// Ảnh trong thư mục anh/: slot1.jpg, slot2.jpg (ảnh lắp đặt), nghiemthu1..4.jpg (ảnh nghiệm thu), logo.png
 const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
@@ -16,7 +16,7 @@ function assets() {
   const dir = path.join(DIR, 'anh');
   if (!fs.existsSync(dir)) return res;
   for (const f of fs.readdirSync(dir)) {
-    const m = f.match(/^(slot[123]|logo|dl06_front|dl06_back)\.(jpe?g|png|webp)$/i);
+    const m = f.match(/^(slot[12]|nghiemthu[1-4]|logo|dl06_front|dl06_back)\.(jpe?g|png|webp)$/i);
     if (!m) continue;
     const mime = m[2].toLowerCase() === 'png' ? 'image/png' : m[2].toLowerCase() === 'webp' ? 'image/webp' : 'image/jpeg';
     res[m[1].toLowerCase().replace('dl06_', '')] = `data:${mime};base64,` + fs.readFileSync(path.join(dir, f)).toString('base64');
