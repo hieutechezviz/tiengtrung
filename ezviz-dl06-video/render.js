@@ -16,10 +16,10 @@ function assets() {
   const dir = path.join(DIR, 'anh');
   if (!fs.existsSync(dir)) return res;
   for (const f of fs.readdirSync(dir)) {
-    const m = f.match(/^(slot[123]|logo)\.(jpe?g|png|webp)$/i);
+    const m = f.match(/^(slot[123]|logo|dl06_front|dl06_back)\.(jpe?g|png|webp)$/i);
     if (!m) continue;
     const mime = m[2].toLowerCase() === 'png' ? 'image/png' : m[2].toLowerCase() === 'webp' ? 'image/webp' : 'image/jpeg';
-    res[m[1].toLowerCase()] = `data:${mime};base64,` + fs.readFileSync(path.join(dir, f)).toString('base64');
+    res[m[1].toLowerCase().replace('dl06_', '')] = `data:${mime};base64,` + fs.readFileSync(path.join(dir, f)).toString('base64');
   }
   return res;
 }

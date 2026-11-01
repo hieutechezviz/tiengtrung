@@ -26,7 +26,7 @@ const CONFIG = {
   methods: [
     { icon: 'finger', hl: 'finger', title: 'Vân tay',      desc: 'Một chạm là mở, nhanh trong tích tắc' },
     { icon: 'keypad', hl: 'keypad', title: 'Mật khẩu',     desc: 'Mã ảo chống nhìn trộm' },
-    { icon: 'card',   hl: 'keypad', title: 'Thẻ từ',       desc: 'Chạm thẻ là mở, tiện cho cả nhà' },
+    { icon: 'card',   hl: 'card',   title: 'Thẻ từ',       desc: 'Chạm thẻ là mở, tiện cho cả nhà' },
     { icon: 'phone',  hl: 'app',    title: 'App EZVIZ',    desc: 'Mở bằng Bluetooth hoặc từ xa qua Wi-Fi' },
     { icon: 'clock',  hl: 'keypad', title: 'Mã tạm thời',  desc: 'Gửi mã cho khách, người giúp việc' },
     { icon: 'key',    hl: 'key',    title: 'Chìa cơ',      desc: 'Dự phòng khi cần thiết' },
@@ -162,8 +162,9 @@ function logo(t) {
   ctx.save(); ctx.globalAlpha = a;
   const x = 56, y = 56;
   if (IMG.logo) {
-    const h = 84, w = IMG.logo.width / IMG.logo.height * h;
-    ctx.drawImage(IMG.logo, x, y, w, h);
+    const h = 62, w = IMG.logo.width / IMG.logo.height * h;
+    shadowCard(x - 4, y - 4, w + 56, h + 40, 32, 'rgba(255,255,255,.95)', 24, .10);
+    ctx.drawImage(IMG.logo, x + 24, y + 16, w, h);
   } else {
     // Wordmark EZVIZ dạng chữ (thay bằng anh/logo.png để dùng logo gốc)
     shadowCard(x, y, 260, 92, 46, 'rgba(255,255,255,.92)', 24, .10);
@@ -172,83 +173,67 @@ function logo(t) {
   ctx.restore();
 }
 
-/* ===================== Vẽ khoá DL06 (minh hoạ) ===================== */
+/* ===================== Khoá DL06 — ẢNH THẬT (anh/dl06_front.png) ===================== */
+// Toạ độ điểm nóng tính theo tỉ lệ ảnh dl06_front.png (326x775)
+const HOT = {
+  panelCx: .85,
+  finger: { x: .742, y: .529, r: .026 },
+  glass:  { x0: .724, x1: .975, y0: .013, y1: .445 },
+  card:   { x: .85, y: .239 },
+  bell:   { x: .844, y: .09 },
+};
+function lockGeom(cx, cy, s) {
+  const im = IMG.front; const h = 880 * s; const w = im ? im.width / im.height * h : h * .42;
+  const x0 = cx - HOT.panelCx * w, y0 = cy - h / 2;
+  return { x0, y0, w, h, P: (fx, fy) => [x0 + fx * w, y0 + fy * h] };
+}
 function drawLock(cx, cy, s, o = {}) {
-  const hl = o.hl, pulse = o.pulse || 0, unlocked = o.unlocked || 0, keyLit = o.keyLit ?? 1;
-  ctx.save(); ctx.translate(cx, cy); ctx.scale(s, s);
-  // bóng đổ
-  ctx.save(); ctx.shadowColor = 'rgba(15,42,68,.28)'; ctx.shadowBlur = 60; ctx.shadowOffsetY = 30;
-  rr(-104, -364, 208, 728, 46); ctx.fillStyle = '#9AA6B2'; ctx.fill(); ctx.restore();
-  // viền kim loại
-  let g = ctx.createLinearGradient(-104, 0, 104, 0);
-  g.addColorStop(0, '#C9D1D9'); g.addColorStop(.5, '#F2F5F8'); g.addColorStop(1, '#AEB8C2');
-  rr(-104, -364, 208, 728, 46); ctx.fillStyle = g; ctx.fill();
-  // mặt kính
-  g = ctx.createLinearGradient(0, -356, 0, 356);
-  g.addColorStop(0, '#2A3038'); g.addColorStop(1, '#1A1E24');
-  rr(-94, -354, 188, 708, 40); ctx.fillStyle = g; ctx.fill();
-  // phản quang
-  ctx.save(); rr(-94, -354, 188, 708, 40); ctx.clip();
-  const gl = ctx.createLinearGradient(-94, -354, 94, 0);
-  gl.addColorStop(0, 'rgba(255,255,255,.14)'); gl.addColorStop(.5, 'rgba(255,255,255,0)');
-  ctx.fillStyle = gl; ctx.fillRect(-94, -354, 188, 400); ctx.restore();
-
-  // bàn phím
-  const keys = ['1','2','3','4','5','6','7','8','9','*','0','#'];
-  const kOn = hl === 'keypad' ? 1 : 0.35 * keyLit;
-  keys.forEach((k, i) => {
-    const col = i % 3, row = Math.floor(i / 3);
-    const x = -52 + col * 52, y = -280 + row * 62;
-    if (hl === 'keypad') {
-      ctx.save(); ctx.shadowColor = 'rgba(80,180,255,.9)'; ctx.shadowBlur = 14 + 8 * pulse;
-      text(k, x, y, { size: 34, weight: 500, color: '#8FD3FF' }); ctx.restore();
-    } else {
-      text(k, x, y, { size: 34, weight: 500, color: `rgba(170,190,210,${kOn})` });
-    }
-  });
-  // vùng đọc thẻ (icon nhỏ)
-  ctx.save(); ctx.strokeStyle = hl === 'keypad' ? '#8FD3FF' : 'rgba(170,190,210,.35)'; ctx.lineWidth = 3;
-  for (let i = 1; i <= 2; i++) { ctx.beginPath(); ctx.arc(0, -318, 7 * i, -Math.PI * .8, -Math.PI * .2); ctx.stroke(); }
-  ctx.restore();
-
-  // cảm biến vân tay
-  const fy = 0;
-  const ringCol = unlocked > 0 ? `rgba(34,176,125,${.5 + .5 * unlocked})` : (hl === 'finger' ? '#5BB9FF' : 'rgba(91,185,255,.35)');
+  const hl = o.hl, pulse = o.pulse || 0, unlocked = o.unlocked || 0;
+  const g = lockGeom(cx, cy, s); const im = IMG.front;
+  if (!im) return;
+  // bóng đổ mềm dưới khoá
   ctx.save();
-  if (hl === 'finger' || unlocked > 0) { ctx.shadowColor = unlocked > 0 ? '#22B07D' : '#5BB9FF'; ctx.shadowBlur = 20 + 20 * pulse; }
-  ctx.strokeStyle = ringCol; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(0, fy, 40, 0, 6.3); ctx.stroke();
+  ctx.shadowColor = 'rgba(15,42,68,.30)'; ctx.shadowBlur = 50 * s; ctx.shadowOffsetX = 18 * s; ctx.shadowOffsetY = 30 * s;
+  ctx.drawImage(im, g.x0, g.y0, g.w, g.h);
   ctx.restore();
-  ctx.beginPath(); ctx.arc(0, fy, 33, 0, 6.3); ctx.fillStyle = '#0E1115'; ctx.fill();
-  ctx.save(); ctx.strokeStyle = 'rgba(140,160,180,.35)'; ctx.lineWidth = 2;
-  for (let i = 1; i <= 4; i++) { ctx.beginPath(); ctx.arc(0, fy + 4, i * 6.5, Math.PI * 1.1, Math.PI * 1.9 + i * .08); ctx.stroke(); }
-  ctx.restore();
-
-  // tay nắm
-  const hy = 120;
-  const ang = -unlocked * 0.0; // giữ tay nắm cố định
-  ctx.save(); ctx.translate(0, hy); ctx.rotate(ang);
-  ctx.save(); ctx.shadowColor = 'rgba(15,42,68,.35)'; ctx.shadowBlur = 24; ctx.shadowOffsetY = 12;
-  g = ctx.createLinearGradient(0, -26, 0, 26);
-  g.addColorStop(0, '#E9EEF2'); g.addColorStop(.45, '#B9C3CD'); g.addColorStop(1, '#7E8A96');
-  rr(-10, -24, 300, 48, 24); ctx.fillStyle = g; ctx.fill(); ctx.restore();
-  // đế tay nắm
-  g = ctx.createRadialGradient(-10, -10, 4, 0, 0, 52);
-  g.addColorStop(0, '#F4F7FA'); g.addColorStop(1, '#8D98A4');
-  ctx.beginPath(); ctx.arc(0, 0, 50, 0, 6.3); ctx.fillStyle = g; ctx.fill();
-  ctx.restore();
-
-  // ổ chìa cơ
-  const ky = 250;
-  ctx.save();
-  if (hl === 'key') { ctx.shadowColor = '#5BB9FF'; ctx.shadowBlur = 20 + 20 * pulse; }
-  rr(-18, ky - 30, 36, 60, 18); ctx.fillStyle = hl === 'key' ? '#3A4654' : '#2E353E'; ctx.fill();
-  ctx.strokeStyle = hl === 'key' ? '#5BB9FF' : '#4A535E'; ctx.lineWidth = 3; ctx.stroke();
-  ctx.restore();
-  ctx.fillStyle = '#0C0F13'; rr(-3, ky - 14, 6, 28, 3); ctx.fill();
-
-  // chữ EZVIZ trên khoá
-  text('EZVIZ', 0, 318, { size: 22, weight: 800, color: 'rgba(210,220,230,.75)', spacing: 3 });
-  ctx.restore();
+  // mặt kính sáng lên khi dùng bàn phím / thẻ
+  if (hl === 'keypad' || hl === 'card') {
+    const [gx0, gy0] = g.P(HOT.glass.x0, HOT.glass.y0), [gx1, gy1] = g.P(HOT.glass.x1, HOT.glass.y1);
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    rr(gx0 + 4 * s, gy0 + 4 * s, gx1 - gx0 - 8 * s, gy1 - gy0 - 8 * s, 18 * s);
+    const lg = ctx.createLinearGradient(0, gy0, 0, gy1);
+    lg.addColorStop(0, `rgba(40,120,200,${.10 + .10 * pulse})`); lg.addColorStop(1, `rgba(40,120,200,${.04 + .06 * pulse})`);
+    ctx.fillStyle = lg; ctx.fill(); ctx.restore();
+    ctx.save(); ctx.shadowColor = '#5BB9FF'; ctx.shadowBlur = 30 * s * (1 + pulse);
+    rr(gx0, gy0, gx1 - gx0, gy1 - gy0, 20 * s); ctx.strokeStyle = `rgba(91,185,255,${.6 + .4 * pulse})`; ctx.lineWidth = 4 * s; ctx.stroke(); ctx.restore();
+  }
+  if (hl === 'card') {
+    const [x, y] = g.P(HOT.card.x, HOT.card.y);
+    ctx.save(); ctx.strokeStyle = '#8FD3FF'; ctx.lineWidth = 3 * s;
+    for (let i = 1; i <= 3; i++) { ctx.globalAlpha = (1 - i / 4) * (.5 + .5 * pulse); ctx.beginPath(); ctx.arc(x, y, (14 + i * 14) * s, 0, 6.3); ctx.stroke(); }
+    ctx.restore();
+  }
+  // vòng sáng tại cảm biến vân tay
+  const [fx, fy] = g.P(HOT.finger.x, HOT.finger.y); const fr = HOT.finger.r * g.h;
+  if (hl === 'finger' || (unlocked > 0 && o.okAt === 'finger')) {
+    const col = unlocked > 0 ? '34,176,125' : '91,185,255';
+    ctx.save(); ctx.shadowColor = `rgb(${col})`; ctx.shadowBlur = 24 * s * (1 + pulse);
+    ctx.strokeStyle = `rgba(${col},${.75 + .25 * pulse})`; ctx.lineWidth = 5 * s;
+    ctx.beginPath(); ctx.arc(fx, fy, fr * 1.25, 0, 6.3); ctx.stroke();
+    for (let i = 1; i <= 2; i++) { ctx.globalAlpha = .5 * (1 - i / 3) * (.4 + .6 * pulse); ctx.beginPath(); ctx.arc(fx, fy, fr * (1.25 + i * .55), 0, 6.3); ctx.stroke(); }
+    ctx.restore();
+  }
+  // đèn xanh lá khi mở khoá (viền mặt kính)
+  if (unlocked > 0 && o.okAt !== 'finger') {
+    const [gx0, gy0] = g.P(HOT.glass.x0, HOT.glass.y0), [gx1, gy1] = g.P(HOT.glass.x1, HOT.glass.y1);
+    ctx.save(); ctx.globalAlpha = unlocked; ctx.shadowColor = '#22B07D'; ctx.shadowBlur = 30 * s;
+    rr(gx0, gy0, gx1 - gx0, gy1 - gy0, 20 * s); ctx.strokeStyle = '#3DD39A'; ctx.lineWidth = 5 * s; ctx.stroke(); ctx.restore();
+  }
+}
+function drawBack(cx, cy, h, alpha = 1) {
+  const im = IMG.back; if (!im) return; const w = im.width / im.height * h;
+  ctx.save(); ctx.globalAlpha *= alpha; ctx.shadowColor = 'rgba(15,42,68,.25)'; ctx.shadowBlur = 40; ctx.shadowOffsetY = 24;
+  ctx.drawImage(im, cx - w / 2, cy - h / 2, w, h); ctx.restore();
 }
 
 /* ===================== Icon ===================== */
@@ -437,16 +422,16 @@ function sceneIntro(t, dur) {
   // hào quang
   const hk = eOut(prog(t, 0, 1.2));
   ctx.save();
-  const rg = ctx.createRadialGradient(540, 1180, 0, 540, 1180, 520 * hk);
+  const rg = ctx.createRadialGradient(560, 1200, 0, 560, 1200, 520 * hk);
   rg.addColorStop(0, 'rgba(91,185,255,.35)'); rg.addColorStop(1, 'rgba(91,185,255,0)');
   ctx.fillStyle = rg; ctx.fillRect(0, 500, W, 1400);
   ctx.strokeStyle = 'rgba(44,154,240,.25)'; ctx.lineWidth = 3;
-  for (let i = 0; i < 3; i++) { const r = (320 + i * 110) * hk + Math.sin(t * 2 + i) * 6; ctx.beginPath(); ctx.arc(540, 1180, r, 0, 6.3); ctx.stroke(); }
+  for (let i = 0; i < 3; i++) { const r = (320 + i * 110) * hk + Math.sin(t * 2 + i) * 6; ctx.beginPath(); ctx.arc(560, 1200, r, 0, 6.3); ctx.stroke(); }
   ctx.restore();
   // khoá trượt lên
   const lk = eOut(prog(t, .2, 1.4));
   const fin = prog(t, 2.2, 3.0);
-  drawLock(430, 1180 + (1 - lk) * 700, 1.05, { hl: fin > 0 ? 'finger' : null, pulse: (Math.sin(t * 8) + 1) / 2, unlocked: eOut(prog(t, 2.8, 3.2)) });
+  drawLock(640, 1200 + (1 - lk) * 700, 1.12, { hl: fin > 0 ? 'finger' : null, pulse: (Math.sin(t * 8) + 1) / 2, unlocked: eOut(prog(t, 2.8, 3.2)), okAt: 'finger' });
   // tiêu đề
   const ta = eOut(prog(t, .6, 1.3));
   ctx.save(); ctx.globalAlpha = ta;
@@ -466,7 +451,7 @@ function sceneIntro(t, dur) {
   });
   // nhãn mở khoá
   const ua = eBack(prog(t, 3.0, 3.5));
-  if (ua > 0) pill('Mở khoá thành công', 540, 1690, { size: 32, solid: true, c1: '#3DD39A', c2: C.ok, icon: 'check', alpha: clamp(ua) });
+  if (ua > 0) pill('Mở khoá thành công', 540, 1730, { size: 32, solid: true, c1: '#3DD39A', c2: C.ok, icon: 'check', alpha: clamp(ua) });
 }
 
 function sceneMIntro(t, dur) {
@@ -500,7 +485,7 @@ function sceneMethods(t, dur) {
   // khoá bên trái
   const lockIn = eOut(prog(t, 0, .5));
   const unlocked = eOut(prog(lt, 1.15, 1.4)) * (1 - prog(lt, 1.9, 2.0));
-  drawLock(250 - (1 - lockIn) * 400, 1000, .92, { hl: m.hl === 'app' ? 'finger' : m.hl, pulse: (Math.sin(t * 9) + 1) / 2, unlocked });
+  drawLock(390 - (1 - lockIn) * 500, 1000, .98, { hl: m.hl === 'app' || m.hl === 'key' ? null : m.hl, pulse: (Math.sin(t * 9) + 1) / 2, unlocked, okAt: m.hl === 'finger' ? 'finger' : 'glass' });
 
   // số thứ tự mờ
   const a = eOut(prog(lt, 0, .35)) * (1 - eOut(prog(lt, 1.8, 2.0)));
@@ -537,8 +522,8 @@ function methodFx(i, lt) {
   }
   if (i === 2) { // thẻ bay vào khoá
     const k = eInOut(prog(lt, .3, 1.1));
-    const x = lerp(cx + 120, 250 + 40, k), y = lerp(cy + 520, 1000 - 240, k);
-    ctx.save(); ctx.translate(x, y); ctx.rotate(lerp(.3, -.1, k));
+    const tg = lockGeom(390, 1000, .98).P(HOT.card.x, HOT.card.y); const x = lerp(cx + 120, tg[0] - 20, k), y = lerp(cy + 520, tg[1] + 30, k);
+    ctx.save(); ctx.translate(x, y); ctx.rotate(lerp(.3, -.1, k)); ctx.scale(lerp(1, .6, k), lerp(1, .6, k));
     shadowCard(-80, -50, 160, 100, 14, '#FFFFFF', 30, .25);
     const g = ctx.createLinearGradient(-80, -50, 80, 50); g.addColorStop(0, '#5BB9FF'); g.addColorStop(1, C.blueD);
     rr(-80, -50, 160, 100, 14); ctx.fillStyle = g; ctx.fill();
@@ -559,7 +544,7 @@ function methodFx(i, lt) {
     ctx.beginPath(); ctx.arc(cx, cy, 165, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * clamp(lt / 1.15)); ctx.stroke(); ctx.restore();
   }
   if (i === 5) {
-    text('Ổ khoá cơ tiêu chuẩn', cx, 1200, { size: 30, weight: 600, color: C.blue });
+    text('Mở bằng chìa khi cần', cx, 1200, { size: 30, weight: 600, color: C.blue });
   }
 }
 
@@ -590,10 +575,11 @@ function sceneFeatures(t, dur) {
 function sceneOutro(t, dur) {
   const lk = eOut(prog(t, 0, .8));
   ctx.save();
-  const rg = ctx.createRadialGradient(540, 760, 0, 540, 760, 460);
+  const rg = ctx.createRadialGradient(560, 760, 0, 560, 760, 520);
   rg.addColorStop(0, 'rgba(91,185,255,.35)'); rg.addColorStop(1, 'rgba(91,185,255,0)');
   ctx.globalAlpha = lk; ctx.fillStyle = rg; ctx.fillRect(0, 200, W, 1200); ctx.restore();
-  drawLock(430, 780 + (1 - lk) * 120, .82, { hl: 'keypad', pulse: (Math.sin(t * 5) + 1) / 2 });
+  drawBack(820, 760 + (1 - lk) * 120, 700, lk * .95);
+  drawLock(470, 760 + (1 - lk) * 120, .86, { hl: 'finger', pulse: (Math.sin(t * 5) + 1) / 2 });
   const ta = eOut(prog(t, .4, 1.0));
   ctx.save(); ctx.globalAlpha = ta;
   const g = ctx.createLinearGradient(200, 0, 880, 0); g.addColorStop(0, C.ink); g.addColorStop(1, C.blueD);
